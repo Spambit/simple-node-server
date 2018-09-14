@@ -1,8 +1,8 @@
 const express = require("express");
 const port = 3000;
 const app = express(),
-  bodyParser = require('body-parser'),
-  path = require('path'),
+  bodyParser = require("body-parser"),
+  path = require("path"),
   fileUpload = require("express-fileupload");
 
 app.use(bodyParser.json());
@@ -16,11 +16,29 @@ app.get("/", function(req, res) {
 });
 
 app.get("/download/:filename", (req, res) => {
+  console.log(req.headers);
+  let cookies = parseCookies(req);
+  for (let key of Object.keys(cookies)) {
+    var cookie = cookies[key];
+    console.log(cookie);
+  }
   let fileName = req.params.filename;
-  console.log(__dirname);
+  console.log(JSON.stringify(req.headers));
   delay(10000);
-  res.sendFile(path.join(__dirname, 'download', fileName));
+  res.sendFile(path.join(__dirname, "download", fileName));
 });
+
+function parseCookies(request) {
+  var list = {},
+    rc = request.headers.cookie;
+
+  rc &&
+    rc.split(";").forEach(function(cookie) {
+      var parts = cookie.split("=");
+      list[parts.shift().trim()] = decodeURI(parts.join("="));
+    });
+  return list;
+}
 
 function delay(millisec) {
   if (millisec < 0) return;
@@ -38,7 +56,7 @@ app.use("/upload", function(req, res) {
   uploadFilename++;
   console.log("New filename is :" + uploadFilename);
   req.on("data", function(data) {
-    delay(10000);
+    delay(100);
     fs.appendFileSync(`upload/${uploadFilename}.jpg`, data);
   });
   req.on("end", () => {
