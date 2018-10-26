@@ -1,4 +1,14 @@
 const express = require("express");
+const fs = require('fs');
+const key = fs.readFileSync('encryption/myprivate.key');
+const cert = fs.readFileSync( 'encryption/mycert.cert' );
+const options = {
+  key: key,
+  cert: cert
+  };
+const https = require('https');
+const http = require('http');
+const httpsPort = 443;
 const port = 3000;
 const app = express(),
   bodyParser = require("body-parser"),
@@ -7,12 +17,24 @@ const app = express(),
 
 app.use(bodyParser.json());
 
-app.listen(port, function() {
-  console.log("Server is running on " + port + " port");
+http.createServer(app).listen(port, function() {
+  console.log("Http Server is running on " + port + " port");
+});
+
+https.createServer(options, app).listen(httpsPort,function(){
+  console.log("Https Server is running on " + httpsPort + " port");
+});
+
+app.use(function(req, res, next) {
+  if (req.secure) {
+      next();
+  } else {
+      res.redirect('https://' + req.headers.host + req.url);
+  }
 });
 
 app.get("/", function(req, res) {
-  res.send("<h1>Hello World!</h1>");
+  res.send("<h1>Welcome</h1>");
 });
 
 app.get("/download/:filename", (req, res) => {
@@ -50,7 +72,6 @@ function delay(millisec) {
 }
 
 let uploadFilename = 0;
-const fs = require("fs");
 app.use("/upload", function(req, res) {
   console.log("Old filename was :" + uploadFilename);
   uploadFilename++;
