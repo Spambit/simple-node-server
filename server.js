@@ -46,7 +46,7 @@ app.get("/download/:filename", (req, res) => {
   }
   let fileName = req.params.filename;
   console.log(JSON.stringify(req.headers));
-  delay(10000);
+  delay(5000);
   res.sendFile(path.join(__dirname, "download", fileName));
 });
 
@@ -77,7 +77,7 @@ app.use("/upload", function(req, res) {
   uploadFilename++;
   console.log("New filename is :" + uploadFilename);
   req.on("data", function(data) {
-    delay(100);
+    delay(5000);
     fs.appendFileSync(`upload/${uploadFilename}.jpg`, data);
   });
   req.on("end", () => {
