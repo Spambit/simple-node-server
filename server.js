@@ -25,16 +25,20 @@ https.createServer(options, app).listen(httpsPort,function(){
   console.log("Https Server is running on " + httpsPort + " port");
 });
 
-app.use(function(req, res, next) {
-  if (req.secure) {
-      next();
-  } else {
-      res.redirect('https://' + req.headers.host + req.url);
-  }
-});
+// app.use(function(req, res, next) {
+//   if (req.secure) {
+//       next();
+//   } else {
+//       res.redirect('https://' + req.headers.host + req.url);
+//   }
+// });
 
+//app.use(express.static(__dirname+'/hosted/dist'));
 app.get("/", function(req, res) {
-  res.send("<h1>Welcome</h1>");
+  console.log(req.protocol + '://' + req.get('host') + req.originalUrl);
+  //res.send("<h1>Welcome</h1>");
+  res.redirect('http://192.168.0.103:3001/');
+  //res.sendFile(path.join(__dirname));
 });
 
 app.get("/download/:filename", (req, res) => {
