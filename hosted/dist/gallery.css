@@ -1,0 +1,17 @@
+div.gallery {
+    margin: 5px;
+    padding-top: 10px;
+    border: none;
+    position: absolute;
+    width: auto;
+}
+
+div.gallery:hover {
+    border: 1px solid #777;
+}
+
+div.gallery img {
+    width: 100%;
+    height: auto;
+    display : block;
+}

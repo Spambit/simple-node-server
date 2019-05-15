@@ -1,11 +1,11 @@
 const express = require("express");
 const fs = require('fs');
 const key = fs.readFileSync('encryption/myprivate.key');
-const cert = fs.readFileSync( 'encryption/mycert.cert' );
+const cert = fs.readFileSync('encryption/mycert.cert');
 const options = {
   key: key,
   cert: cert
-  };
+};
 const https = require('https');
 const http = require('http');
 const httpsPort = 443;
@@ -14,52 +14,70 @@ const app = express(),
   bodyParser = require("body-parser"),
   path = require("path"),
   fileUpload = require("express-fileupload");
-
 app.use(bodyParser.json());
+app.use(express.static(__dirname + '/hosted/dist'));
 
-http.createServer(app).listen(port, function() {
+http.createServer(app).listen(port, function () {
   console.log("Http Server is running on " + port + " port");
 });
 
-https.createServer(options, app).listen(httpsPort,function(){
+https.createServer(options, app).listen(httpsPort, function () {
   console.log("Https Server is running on " + httpsPort + " port");
 });
 
-// app.use(function(req, res, next) {
-//   if (req.secure) {
-//       next();
-//   } else {
-//       res.redirect('https://' + req.headers.host + req.url);
-//   }
-// });
+var setMultipleCookies = function(res) {
+  res.cookie(myCookie1, myValue1, { httpOnly: true });
+  res.cookie(myCookie2, myValue2);
+}
 
-//app.use(express.static(__dirname+'/hosted/dist'));
-app.get("/", function(req, res) {
+/*
+app.use(function(req, res, next) {
+  if (req.secure) {
+      next();
+  } else {
+      let url = 'https://' + req.hostname + ':'+httpsPort;
+      console.log('Redirecting to: '+url);
+      res.redirect(url);
+  }
+});
+*/
+
+app.get("/", function (req, res) {
   console.log(req.protocol + '://' + req.get('host') + req.originalUrl);
-  //res.send("<h1>Welcome</h1>");
-  res.redirect('http://192.168.0.103:3001/');
+  res.send("<h1>Welcome</h1>");
+  //res.redirect('http://192.168.0.103:3001/');
   //res.sendFile(path.join(__dirname));
+});
+
+app.get("/cookies", function (req, res) {
+  console.log(req.protocol + '://' + req.get('host') + req.originalUrl);
+  logCookies(req);
+  setMultipleCookies(res);
+  res.end("<h1>Check your browser cookies. It should have been set.</h1>");
 });
 
 app.get("/download/:filename", (req, res) => {
   console.log(req.headers);
-  let cookies = parseCookies(req);
-  for (let key of Object.keys(cookies)) {
-    var cookie = cookies[key];
-    console.log(cookie);
-  }
   let fileName = req.params.filename;
   console.log(JSON.stringify(req.headers));
   delay(5000);
   res.sendFile(path.join(__dirname, "download", fileName));
 });
 
+function logCookies(req) {
+  let cookies = parseCookies(req);
+  for (let key of Object.keys(cookies)) {
+    var cookie = cookies[key];
+    console.log(cookie);
+  }
+}
+
 function parseCookies(request) {
   var list = {},
     rc = request.headers.cookie;
 
   rc &&
-    rc.split(";").forEach(function(cookie) {
+    rc.split(";").forEach(function (cookie) {
       var parts = cookie.split("=");
       list[parts.shift().trim()] = decodeURI(parts.join("="));
     });
@@ -71,16 +89,16 @@ function delay(millisec) {
   console.log("Server is delaying your request for :" + millisec + "ms");
   let timeNow = Date.now(),
     futureTime = timeNow + millisec;
-  while (Date.now() <= futureTime) {}
+  while (Date.now() <= futureTime) { }
   console.log("Server woke up after :" + millisec + "ms");
 }
 
 let uploadFilename = 0;
-app.use("/upload", function(req, res) {
+app.use("/upload", function (req, res) {
   console.log("Old filename was :" + uploadFilename);
   uploadFilename++;
   console.log("New filename is :" + uploadFilename);
-  req.on("data", function(data) {
+  req.on("data", function (data) {
     delay(5000);
     fs.appendFileSync(`upload/${uploadFilename}.jpg`, data);
   });
