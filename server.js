@@ -25,9 +25,16 @@ https.createServer(options, app).listen(httpsPort, function () {
   console.log("Https Server is running on " + httpsPort + " port");
 });
 
+app.use(function(req, res, next) {
+  if (res) {
+    //res.set('Access-Control-Allow-Origin', 'file://');
+    res.set('Access-Control-Allow-Credentials',true);
+  }
+  next();
+});
+
 var setMultipleCookies = function(res) {
-  res.cookie(myCookie1, myValue1, { httpOnly: true });
-  res.cookie(myCookie2, myValue2);
+  res.cookie("myCookie1", "myValue1",{secure:false});
 }
 
 /*
@@ -42,6 +49,18 @@ app.use(function(req, res, next) {
 });
 */
 
+app.get("/ok", function (req, res) {
+  //logCookie(req);
+  logHeaders(req);
+  res.cookie("myCookie-OK", "myValue-OK");
+  res.send("<h1>Welcome</h1>");
+});
+
+app.get("/spaces", function (req, res) {
+  logQuery(req);
+  res.send("<h1>Space in query works</h1>");
+});
+
 app.get("/", function (req, res) {
   console.log(req.protocol + '://' + req.get('host') + req.originalUrl);
   res.send("<h1>Welcome</h1>");
@@ -51,7 +70,7 @@ app.get("/", function (req, res) {
 
 app.get("/cookies", function (req, res) {
   console.log(req.protocol + '://' + req.get('host') + req.originalUrl);
-  logCookies(req);
+  logCookie(req);
   setMultipleCookies(res);
   res.end("<h1>Check your browser cookies. It should have been set.</h1>");
 });
@@ -64,7 +83,25 @@ app.get("/download/:filename", (req, res) => {
   res.sendFile(path.join(__dirname, "download", fileName));
 });
 
-function logCookies(req) {
+function logCookie(req){
+  console.log(req.headers.cookie);
+}
+function logQuery(req){
+  let queries = req.query;
+  for (var key in queries) {
+    if (queries.hasOwnProperty(key)) {
+        console.log(key + " -> " + queries[key]);
+    }
+  }
+}
+
+function logHeaders(req) {
+  for (let key of Object.keys(req.headers)) {
+    console.log(`${key}:${req.headers[key]}`);
+  }
+}
+
+function logCookieValues(req) {
   let cookies = parseCookies(req);
   for (let key of Object.keys(cookies)) {
     var cookie = cookies[key];
